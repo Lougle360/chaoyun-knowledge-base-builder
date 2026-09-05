@@ -1,0 +1,518 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.cursor/chaoyun-knowledge-base-builder/component-schema-2.2.json",
+  "title": "通用结构化知识组件 Frontmatter Schema",
+  "type": "object",
+  "required": [
+    "id",
+    "kb_id",
+    "type",
+    "type_cn",
+    "domain_profile",
+    "role",
+    "title",
+    "summary",
+    "evidence_level",
+    "status",
+    "taxonomy_version",
+    "component_version",
+    "content_layers",
+    "provenance",
+    "canonical",
+    "dedupe_status",
+    "conflict_status",
+    "risk",
+    "depends_on",
+    "related"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9_-]*){2,}$"
+    },
+    "kb_id": {"type": "string", "minLength": 1},
+    "type": {
+      "type": "string",
+      "enum": [
+        "concept",
+        "principle",
+        "viewpoint",
+        "misconception",
+        "guideline",
+        "framework",
+        "rule",
+        "workflow",
+        "tool",
+        "solution",
+        "scene",
+        "case",
+        "analogy",
+        "story",
+        "boundary",
+        "source",
+        "data",
+        "quote",
+        "paradigm",
+        "course"
+      ]
+    },
+    "type_cn": {"type": "string", "minLength": 2},
+    "role": {
+      "type": "string",
+      "enum": ["leaf", "container", "preface", "meta"]
+    },
+    "title": {"type": "string", "minLength": 2},
+    "summary": {"type": "string", "minLength": 10, "maxLength": 160},
+    "severity": {
+      "type": "string",
+      "enum": ["低", "一般", "高", "关键"]
+    },
+    "domain": {"type": "string"},
+    "domain_profile": {"type": "string", "default": "general"},
+    "applies_to": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "tags": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "source_file": {
+      "type": "string",
+      "minLength": 1,
+      "description": "旧版单来源兼容字段；新组件优先使用 provenance"
+    },
+    "source_lines": {
+      "oneOf": [
+        {
+          "type": "array",
+          "items": {"type": "integer", "minimum": 1},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        {"type": "string", "pattern": "^\\d+-\\d+$"}
+      ]
+    },
+    "source_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "provenance": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/provenanceItem"}
+    },
+    "lineage": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "evidence_level": {
+      "type": "string",
+      "enum": [
+        "原文主张",
+        "经验总结",
+        "案例印证",
+        "多源共识",
+        "现代可验证事实",
+        "整理者推断"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["计划", "已采集", "草稿", "已整理", "已复核", "accepted"]
+    },
+    "taxonomy_version": {
+      "type": "string",
+      "pattern": "^2\\.\\d+\\.\\d+$"
+    },
+    "component_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "content_layers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/contentLayer"}
+    },
+    "visualizations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/visualization"}
+    },
+    "visualization_required": {"type": "boolean"},
+    "editorial_additions": {"type": "boolean"},
+    "canonical": {"type": "boolean"},
+    "variant_of": {"type": ["string", "null"]},
+    "aliases": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "dedupe_status": {
+      "type": "string",
+      "enum": ["unique", "canonical", "variant", "candidate", "review-required"]
+    },
+    "conflict_status": {
+      "type": "string",
+      "enum": ["none", "open", "resolved", "preserve-both", "not-applicable"]
+    },
+    "conflict_ids": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "supersedes": {"type": ["string", "null"]},
+    "deprecated": {"type": "boolean"},
+    "deprecated_by": {"type": ["string", "null"]},
+    "migration_log": {"type": "array"},
+    "depends_on": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "related": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "risk": {"$ref": "#/$defs/risk"},
+    "validity": {"$ref": "#/$defs/validity"},
+    "extensions": {"type": "object"}
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {"const": "workflow"},
+          "role": {"const": "leaf"}
+        },
+        "required": ["type", "role"]
+      },
+      "then": {"required": ["visualizations"]}
+    },
+    {
+      "if": {
+        "properties": {
+          "risk": {
+            "properties": {
+              "level": {"enum": ["high", "critical"]}
+            },
+            "required": ["level"]
+          }
+        },
+        "required": ["risk"]
+      },
+      "then": {
+        "properties": {
+          "risk": {
+            "required": [
+              "domains",
+              "required_reviewer_role",
+              "reviewer_identity",
+              "approved_at",
+              "approval_evidence",
+              "approval_status",
+              "prohibited_uses",
+              "stop_or_refer"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {"status": {"enum": ["已复核", "accepted"]}},
+        "required": ["status"]
+      },
+      "then": {
+        "not": {
+          "properties": {
+            "risk": {
+              "properties": {
+                "level": {"enum": ["high", "critical"]},
+                "approval_status": {
+                  "enum": ["not-required", "pending", "rejected"]
+                }
+              },
+              "required": ["level", "approval_status"]
+            }
+          },
+          "required": ["risk"]
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "anchor": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "line_range",
+            "heading_range",
+            "paragraph_range",
+            "page_bbox",
+            "page_range",
+            "slide",
+            "time_range",
+            "sheet_range",
+            "css_selector",
+            "xpath",
+            "text_quote",
+            "region"
+          ]
+        },
+        "start": {"type": ["integer", "number", "string"]},
+        "end": {"type": ["integer", "number", "string"]},
+        "value": {},
+        "quote": {"type": "string"}
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "line_range",
+                  "heading_range",
+                  "paragraph_range",
+                  "page_range",
+                  "time_range",
+                  "sheet_range"
+                ]
+              }
+            }
+          },
+          "then": {"required": ["start", "end"]}
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "slide",
+                  "page_bbox",
+                  "css_selector",
+                  "xpath",
+                  "text_quote",
+                  "region"
+                ]
+              }
+            }
+          },
+          "then": {"required": ["value"]}
+        }
+      ],
+      "additionalProperties": false
+    },
+    "provenanceItem": {
+      "type": "object",
+      "required": [
+        "source_id",
+        "revision_id",
+        "source_file",
+        "source_sha256",
+        "anchors",
+        "evidence_role",
+        "extraction_method"
+      ],
+      "properties": {
+        "source_id": {"type": "string", "minLength": 1},
+        "revision_id": {"type": "string", "minLength": 1},
+        "source_file": {"type": "string"},
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "fragment_ids": {
+          "type": "array",
+          "items": {"type": "string"},
+          "uniqueItems": true
+        },
+        "anchors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/anchor"}
+        },
+        "evidence_role": {
+          "type": "string",
+          "enum": [
+            "supports",
+            "contradicts",
+            "context",
+            "example",
+            "derivation_basis"
+          ]
+        },
+        "extraction_method": {
+          "type": "string",
+          "enum": [
+            "direct",
+            "faithful_paraphrase",
+            "faithful_synthesis",
+            "editorial_inference",
+            "external_fact"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "contentLayer": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "source_quote",
+            "faithful_paraphrase",
+            "faithful_synthesis",
+            "editorial_explanation",
+            "editorial_inference",
+            "external_fact"
+          ]
+        },
+        "source_lines": {
+          "type": "array",
+          "items": {"type": "integer", "minimum": 1},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "basis": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "faithful_synthesis",
+                  "editorial_explanation",
+                  "editorial_inference",
+                  "external_fact"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": ["basis"],
+            "properties": {"basis": {"minItems": 1}}
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "visualization": {
+      "type": "object",
+      "required": ["kind", "layer", "purpose"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "mermaid-flowchart",
+            "mermaid-mindmap",
+            "mermaid-state",
+            "mermaid-timeline",
+            "mermaid-graph",
+            "decision-table",
+            "mapping-table",
+            "risk-matrix",
+            "chart"
+          ]
+        },
+        "layer": {
+          "type": "string",
+          "enum": [
+            "source_visual",
+            "faithful_structuring",
+            "editorial_explanation"
+          ]
+        },
+        "purpose": {"type": "string", "minLength": 3},
+        "source_lines": {
+          "type": "array",
+          "items": {"type": "integer", "minimum": 1},
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "additionalProperties": false
+    },
+    "risk": {
+      "type": "object",
+      "required": ["level", "domains"],
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "critical"]
+        },
+        "domains": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "medical",
+              "legal",
+              "finance",
+              "engineering",
+              "safety",
+              "privacy",
+              "other"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "jurisdictions": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "required_reviewer_role": {"type": ["string", "null"]},
+        "reviewer_identity": {"type": ["string", "null"]},
+        "approved_at": {"type": ["string", "null"], "format": "date-time"},
+        "approval_evidence": {"type": ["string", "null"]},
+        "approval_status": {
+          "type": "string",
+          "enum": [
+            "not-required",
+            "pending",
+            "approved",
+            "rejected"
+          ]
+        },
+        "prohibited_uses": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "stop_or_refer": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "validity": {
+      "type": "object",
+      "properties": {
+        "effective_from": {"type": ["string", "null"], "format": "date"},
+        "effective_to": {"type": ["string", "null"], "format": "date"},
+        "jurisdictions": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "product_versions": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
