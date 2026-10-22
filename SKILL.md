@@ -13,10 +13,16 @@ description: 将围绕某一主题的零碎、多格式、多来源资料，以�
 
 ## 快速入口
 
-确定性工作由脚本执行，语义工作由 Agent 完成：
+确定性工作由脚本执行，语义工作由 Agent 完成。
+
+本机必须使用本 Skill 目录下的 Python 3.11 虚拟环境，不要用系统默认的 Python 3.14（`markitdown>=0.1.3` 无法安装）：
 
 ```text
-python scripts/build_kb.py run <来源目录> <输出目录> --kb-id <稳定英文ID> --title <知识库名> --question <中心问题> --include <纳入主题>
+C:\Users\QIQI\.cursor\skills\chaoyun-knowledge-base-builder\.venv\Scripts\python.exe
+```
+
+```text
+.venv\Scripts\python.exe scripts/build_kb.py run <来源目录> <输出目录> --kb-id <稳定英文ID> --title <知识库名> --question <中心问题> --include <纳入主题>
 ```
 
 `run` 默认只摄取前 3 个文件做试点，并完成初始化、跨格式转换、来源登记、碎片生成和准备阶段校验。随后 Agent 必须：
@@ -24,7 +30,7 @@ python scripts/build_kb.py run <来源目录> <输出目录> --kb-id <稳定英�
 1. 复核 `uncertain` 和低置信度碎片。
 2. 建立跨源聚类、去重、冲突和 `mappings.jsonl`。
 3. 按类型契约生成 `components/`、索引和关系。
-4. 执行 `python scripts/build_kb.py release <输出目录>`；只有门禁通过才能使用 `--publish`。
+4. 执行 `.venv\Scripts\python.exe scripts/build_kb.py release <输出目录>`；只有门禁通过才能使用 `--publish`。
 
 工具职责：
 
