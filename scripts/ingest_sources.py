@@ -77,6 +77,20 @@ def convert_source(path: Path) -> tuple[str, str, str, list[str]]:
         text, issues = read_text_loss_aware(path)
         return text, "direct-text", BUILDER_VERSION, issues
 
+    # MarkItDown may otherwise accept a fake .pdf as plain text. Validate the
+    # container first; a nonempty fallback is not evidence of a valid PDF.
+    if path.suffix.lower() == ".pdf":
+        try:
+            from pdfminer.pdfdocument import PDFDocument
+            from pdfminer.pdfparser import PDFParser
+            with path.open("rb") as stream:
+                if b"%PDF-" not in stream.read(1024):
+                    raise ValueError("缺少 PDF 文件头")
+                stream.seek(0)
+                PDFDocument(PDFParser(stream))
+        except Exception as exc:
+            raise RuntimeError(f"PDF 格式校验失败：{exc}") from exc
+
     try:
         from markitdown import MarkItDown
     except ImportError as exc:

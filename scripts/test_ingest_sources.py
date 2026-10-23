@@ -27,6 +27,47 @@ def rows(path: Path) -> list[dict]:
 
 
 class IngestTests(unittest.TestCase):
+    def test_valid_pdf_is_converted(self) -> None:
+        # Minimal real PDF with a page, font, content stream and xref table.
+        stream = b'BT /F1 12 Tf 72 720 Td (PDF conversion regression sample) Tj ET'
+        objects = [
+            b'<< /Type /Catalog /Pages 2 0 R >>',
+            b'<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+            b'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
+            b'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+            b'<< /Length ' + str(len(stream)).encode() + b' >>\nstream\n' + stream + b'\nendstream',
+        ]
+        data, offsets = b'%PDF-1.4\n', [0]
+        for i, obj in enumerate(objects, 1):
+            offsets.append(len(data))
+            data += f'{i} 0 obj\n'.encode() + obj + b'\nendobj\n'
+        xref = len(data)
+        data += b'xref\n0 6\n0000000000 65535 f \n'
+        data += b''.join(f'{offset:010d} 00000 n \n'.encode() for offset in offsets[1:])
+        data += f'trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF'.encode()
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            input_root, output_root = base / 'input', base / 'output'
+            input_root.mkdir()
+            (input_root / '有效.pdf').write_bytes(data)
+            self.initialize(output_root)
+            result = self.execute(str(INGEST), str(input_root), str(output_root))
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            source = rows(output_root / 'sources.jsonl')[0]
+            self.assertEqual(source['status'], 'ingested')
+            self.assertIn('PDF conversion regression sample', (output_root / source['derived_text_path']).read_text(encoding='utf-8'))
+
+    def test_pdf_header_without_structure_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            input_root, output_root = base / 'input', base / 'output'
+            input_root.mkdir()
+            (input_root / '伪造.pdf').write_bytes(b'%PDF-1.4\nnot a real document')
+            self.initialize(output_root)
+            result = self.execute(str(INGEST), str(input_root), str(output_root))
+            self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+            self.assertEqual(rows(output_root / 'sources.jsonl')[0]['status'], 'failed')
+
     def execute(self, *arguments: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             [sys.executable, *arguments],

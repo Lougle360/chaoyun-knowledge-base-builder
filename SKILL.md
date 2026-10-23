@@ -15,15 +15,14 @@ description: 将围绕某一主题的零碎、多格式、多来源资料，以�
 
 确定性工作由脚本执行，语义工作由 Agent 完成。
 
-本机必须使用本 Skill 目录下的 Python 3.11 虚拟环境，不要用系统默认的 Python 3.14（`markitdown>=0.1.3` 无法安装）：
-
-```text
-C:\Users\QIQI\.cursor\skills\chaoyun-knowledge-base-builder\.venv\Scripts\python.exe
-```
+使用本 Skill 目录下的独立虚拟环境，不要依赖系统默认解释器。当前已在 Windows x64、Python 3.14.9、MarkItDown 0.1.9 下验证：
 
 ```text
 .venv\Scripts\python.exe scripts/build_kb.py run <来源目录> <输出目录> --kb-id <稳定英文ID> --title <知识库名> --question <中心问题> --include <纳入主题>
 ```
+
+Windows + Python 3.14 的验证依赖固定在 `scripts/requirements-python314.lock.txt`；其他平台使用 `scripts/requirements.txt`，重建环境见 `README.md`。
+PDF 转换前检查文件头与可解析文档结构；格式不符或损坏时记录 failed，不允许通用转换器静默按文本接收。正常 PDF 与损坏 PDF 均纳入回归；结构可解析仍不能证明提取内容完整，扫描件和低质量文本需复核。
 
 `run` 默认只摄取前 3 个文件做试点，并完成初始化、跨格式转换、来源登记、碎片生成和准备阶段校验。随后 Agent 必须：
 
