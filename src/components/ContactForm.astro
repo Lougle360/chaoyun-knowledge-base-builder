@@ -1,0 +1,107 @@
+---
+const budgetOptions = [
+  '待沟通',
+  '暂不确定',
+  '按需报价即可',
+];
+
+const sourceOptions = [
+  '搜索引擎',
+  '朋友推荐',
+  '社交媒体',
+  '其他',
+];
+---
+
+<form class="contact-form" data-contact-form novalidate>
+  <div class="form-grid">
+    <label class="field">
+      <span>称呼 <em>*</em></span>
+      <input name="name" type="text" required autocomplete="name" placeholder="怎么称呼你" />
+    </label>
+
+    <label class="field">
+      <span>公司（可选）</span>
+      <input name="company" type="text" autocomplete="organization" placeholder="公司或团队名" />
+    </label>
+
+    <fieldset class="field field-span">
+      <legend>身份 <em>*</em></legend>
+      <div class="choice-row">
+        <label><input type="radio" name="identity" value="企业" required /> 企业</label>
+        <label><input type="radio" name="identity" value="个人" /> 个人</label>
+      </div>
+    </fieldset>
+
+    <label class="field field-span">
+      <span>需求描述 <em>*</em></span>
+      <textarea
+        name="need"
+        rows="5"
+        required
+        placeholder="简单说说想做什么、当前卡在哪、期望怎样落地"
+      ></textarea>
+    </label>
+
+    <label class="field">
+      <span>期望上线时间</span>
+      <input name="timeline" type="text" placeholder="例如：两周内 / 本季度 / 先聊聊" />
+    </label>
+
+    <label class="field">
+      <span>预算区间</span>
+      <select name="budget">
+        {budgetOptions.map((option) => <option value={option}>{option}</option>)}
+      </select>
+    </label>
+
+    <label class="field">
+      <span>联系方式 <em>*</em></span>
+      <input
+        name="contact"
+        type="text"
+        required
+        placeholder="微信 / 邮箱 / 电话（任选一种便于回复的）"
+      />
+    </label>
+
+    <label class="field">
+      <span>从哪里知道我</span>
+      <select name="source">
+        {sourceOptions.map((option) => <option value={option}>{option}</option>)}
+      </select>
+    </label>
+  </div>
+
+  <p class="form-note">
+    当前为前端占位提交：尚未接入邮件/微信通知与防垃圾服务。正式上线前会接上真实投递通道。
+  </p>
+
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">提交需求</button>
+    <p class="form-status" data-form-status role="status" aria-live="polite"></p>
+  </div>
+</form>
+
+<script>
+  const form = document.querySelector('[data-contact-form]');
+  const status = document.querySelector('[data-form-status]');
+
+  if (form instanceof HTMLFormElement && status instanceof HTMLElement) {
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      if (!form.reportValidity()) {
+        status.textContent = '请先补全必填项。';
+        return;
+      }
+
+      const data = Object.fromEntries(new FormData(form).entries());
+      console.info('[contact-form placeholder]', data);
+
+      status.textContent =
+        '已收到表单内容（本地占位）。后端通知与防垃圾提交尚未接入，请稍后通过站内公布的联系方式再确认一次。';
+      form.reset();
+    });
+  }
+</script>

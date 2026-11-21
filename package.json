@@ -1,0 +1,20 @@
+{
+  "name": "chaoyun-ai-journey",
+  "type": "module",
+  "version": "0.1.0",
+  "description": "超云的Ai之旅 — 用 Cursor、Codex 等 AI 工具实操项目的个人博客",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/markdown-satteri": "^0.4.10",
+    "@astrojs/mdx": "^8.1.6",
+    "astro": "^7.4.13"
+  }
+}

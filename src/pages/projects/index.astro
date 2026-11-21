@@ -1,0 +1,90 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { industries, projectCases } from '../../data/projects';
+---
+
+<BaseLayout
+  title="项目案例"
+  description="超云的Ai之旅项目案例：行业、问题、方案、成果与技术栈（首批案例待补充）。"
+>
+  <section class="page-hero wrap">
+    <h1>项目案例</h1>
+    <p>
+      用真实交付证明能力。下列为结构占位，待确认首批代表性项目后替换；不会编造客户名或业绩数字。
+    </p>
+  </section>
+
+  <section class="section wrap" style="padding-top: 0.25rem;">
+    <div class="filter-bar" data-project-filters>
+      <span class="filter-label">行业筛选</span>
+      <div class="filter-chips">
+        <button type="button" class="chip is-active" data-filter="all">全部</button>
+        {
+          industries.map((industry) => (
+            <button type="button" class="chip" data-filter={industry}>
+              {industry}
+            </button>
+          ))
+        }
+      </div>
+    </div>
+
+    <ul class="case-grid" data-case-grid>
+      {
+        projectCases.map((item) => (
+          <li class="case-card" data-industry={item.industry}>
+            <div class="case-top">
+              <p class="case-industry">{item.industry}</p>
+              {item.placeholder ? <span class="badge">占位</span> : null}
+            </div>
+            <h2>{item.title}</h2>
+            <dl class="case-dl">
+              <div>
+                <dt>问题</dt>
+                <dd>{item.problem}</dd>
+              </div>
+              <div>
+                <dt>方案</dt>
+                <dd>{item.solution}</dd>
+              </div>
+              <div>
+                <dt>成果</dt>
+                <dd>{item.outcome}</dd>
+              </div>
+            </dl>
+            <div class="tags">
+              {item.stack.map((tech) => (
+                <span class="tag">{tech}</span>
+              ))}
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="cta-line">
+      有类似需求？
+      <a class="text-link" href="/contact">聊聊你的场景 →</a>
+    </p>
+  </section>
+</BaseLayout>
+
+<script>
+  const bar = document.querySelector('[data-project-filters]');
+  const cards = [...document.querySelectorAll('[data-case-grid] .case-card')];
+
+  bar?.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLButtonElement) || !target.dataset.filter) return;
+
+    const value = target.dataset.filter;
+    bar.querySelectorAll('.chip').forEach((chip) => chip.classList.remove('is-active'));
+    target.classList.add('is-active');
+
+    cards.forEach((card) => {
+      if (!(card instanceof HTMLElement)) return;
+      const show = value === 'all' || card.dataset.industry === value;
+      card.hidden = !show;
+    });
+  });
+</script>
