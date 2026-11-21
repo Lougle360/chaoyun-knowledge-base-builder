@@ -1,0 +1,52 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ContactForm from '../components/ContactForm.astro';
+---
+
+<BaseLayout
+  title="联系 / 需求提交"
+  description="提交 AI 项目或 FDE 合作需求。表单字段已就绪，通知通道待接入。"
+>
+  <section class="page-hero wrap">
+    <h1>联系 / 需求提交</h1>
+    <p>
+      留下场景与约束，方便判断是否适合合作。公开联系方式与预计响应时间待确认后补充，此处不做编造。
+    </p>
+  </section>
+
+  <section class="section wrap" style="padding-top: 0.5rem;">
+    <div class="contact-layout">
+      <div>
+        <h2 class="subsection-title">需求表单</h2>
+        <ContactForm />
+      </div>
+      <aside class="contact-aside">
+        <h2 class="subsection-title">其他联系方式</h2>
+        <dl class="aside-dl">
+          <div>
+            <dt>微信</dt>
+            <dd>待补充（需求第 9 节确认后公布）</dd>
+          </div>
+          <div>
+            <dt>邮箱</dt>
+            <dd>待补充</dd>
+          </div>
+          <div>
+            <dt>电话</dt>
+            <dd>待补充（若选择公开）</dd>
+          </div>
+          <div>
+            <dt>预计响应时间</dt>
+            <dd>待补充</dd>
+          </div>
+        </dl>
+        <p class="muted-note">
+          正式环境将接入邮件或微信通知，并加上防垃圾提交。当前提交仅作前端校验与本地占位反馈。
+        </p>
+        <p>
+          <a class="text-link" href="/fde">了解 FDE 服务 →</a>
+        </p>
+      </aside>
+    </div>
+  </section>
+</BaseLayout>

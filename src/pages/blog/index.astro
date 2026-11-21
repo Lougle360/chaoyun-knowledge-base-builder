@@ -1,0 +1,133 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const tags = [...new Set(posts.flatMap((post) => post.data.tags))].sort((a, b) =>
+  a.localeCompare(b, 'zh-CN'),
+);
+
+function formatDate(date: Date) {
+  return date.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+---
+
+<BaseLayout
+  title="文章"
+  description="超云的Ai之旅文章列表：Cursor、Codex 等 AI 工具实操与项目复盘。"
+>
+  <section class="page-hero wrap">
+    <h1>文章</h1>
+    <p>项目实战、工具心得与落地方法。可用标签筛选或关键词搜索。</p>
+  </section>
+
+  <section class="section wrap" style="padding-top: 0.5rem;" data-blog-list>
+    <label class="search-box">
+      <span class="visually-hidden">搜索文章</span>
+      <input type="search" placeholder="搜索标题或摘要…" data-blog-search />
+    </label>
+
+    <div class="filter-bar">
+      <span class="filter-label">标签</span>
+      <div class="filter-chips" data-tag-filters>
+        <button type="button" class="chip is-active" data-tag="all">全部</button>
+        {
+          tags.map((tag) => (
+            <button type="button" class="chip" data-tag={tag}>
+              {tag}
+            </button>
+          ))
+        }
+      </div>
+    </div>
+
+    <ul class="post-list" data-post-list>
+      {
+        posts.map((post) => (
+          <li
+            data-post-item
+            data-title={post.data.title}
+            data-description={post.data.description}
+            data-tags={post.data.tags.join(',')}
+          >
+            <a class="post-item" href={`/blog/${post.id}/`}>
+              <div class="post-meta">
+                <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+                <div class="tags">
+                  {post.data.tags.map((tag) => (
+                    <span class="tag">{tag}</span>
+                  ))}
+                </div>
+              </div>
+              <h3>{post.data.title}</h3>
+              <p>{post.data.description}</p>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+    <p class="muted-note" data-empty hidden>没有匹配的文章，换个关键词或标签试试。</p>
+  </section>
+</BaseLayout>
+
+<style>
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>
+
+<script>
+  const root = document.querySelector('[data-blog-list]');
+  if (root) {
+    const searchInput = root.querySelector('[data-blog-search]');
+    const tagBar = root.querySelector('[data-tag-filters]');
+    const items = [...root.querySelectorAll('[data-post-item]')];
+    const empty = root.querySelector('[data-empty]');
+    let activeTag = 'all';
+
+    const apply = () => {
+      const query =
+        searchInput instanceof HTMLInputElement ? searchInput.value.trim().toLowerCase() : '';
+      let visible = 0;
+
+      items.forEach((item) => {
+        if (!(item instanceof HTMLElement)) return;
+        const title = (item.dataset.title ?? '').toLowerCase();
+        const description = (item.dataset.description ?? '').toLowerCase();
+        const tags = (item.dataset.tags ?? '').split(',').filter(Boolean);
+        const matchTag = activeTag === 'all' || tags.includes(activeTag);
+        const matchQuery = !query || title.includes(query) || description.includes(query);
+        const show = matchTag && matchQuery;
+        item.hidden = !show;
+        if (show) visible += 1;
+      });
+
+      if (empty instanceof HTMLElement) empty.hidden = visible > 0;
+    };
+
+    searchInput?.addEventListener('input', apply);
+    tagBar?.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLButtonElement) || !target.dataset.tag) return;
+      activeTag = target.dataset.tag;
+      tagBar.querySelectorAll('.chip').forEach((chip) => chip.classList.remove('is-active'));
+      target.classList.add('is-active');
+      apply();
+    });
+  }
+</script>

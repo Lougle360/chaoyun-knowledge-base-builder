@@ -1,0 +1,172 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => !data.draft);
+  const sorted = posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+  return sorted.map((post, index) => ({
+    params: { slug: post.id },
+    props: {
+      post,
+      prev: sorted[index + 1] ?? null,
+      next: sorted[index - 1] ?? null,
+    },
+  }));
+}
+
+const { post, prev, next } = Astro.props;
+const { Content, headings } = await render(post);
+const toc = headings.filter((heading) => heading.depth >= 2 && heading.depth <= 3);
+
+function formatDate(date: Date) {
+  return date.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+---
+
+<BaseLayout title={post.data.title} description={post.data.description}>
+  <article class="wrap article-layout">
+    <header class="page-hero" style="padding-left: 0; padding-right: 0;">
+      <div class="post-meta">
+        <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+        {
+          post.data.tags.map((tag) => (
+            <span class="tag">{tag}</span>
+          ))
+        }
+      </div>
+      <h1>{post.data.title}</h1>
+      <p>{post.data.description}</p>
+    </header>
+
+    {
+      toc.length > 0 ? (
+        <nav class="toc" aria-label="文章目录">
+          <p class="toc-title">目录</p>
+          <ol>
+            {toc.map((heading) => (
+              <li class={`depth-${heading.depth}`}>
+                <a href={`#${heading.slug}`}>{heading.text}</a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      ) : null
+    }
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    <p class="article-cta">
+      有类似需求？
+      <a class="text-link" href="/contact">聊聊 →</a>
+    </p>
+
+    <nav class="pager" aria-label="上下篇文章">
+      {
+        prev ? (
+          <a href={`/blog/${prev.id}/`}>
+            <span>上一篇</span>
+            {prev.data.title}
+          </a>
+        ) : (
+          <span />
+        )
+      }
+      {
+        next ? (
+          <a href={`/blog/${next.id}/`}>
+            <span>下一篇</span>
+            {next.data.title}
+          </a>
+        ) : (
+          <span />
+        )
+      }
+    </nav>
+
+    <p style="margin-top: 2rem;">
+      <a class="btn btn-ghost" href="/blog">← 返回文章列表</a>
+    </p>
+  </article>
+</BaseLayout>
+
+<style>
+  .toc {
+    margin: 0 0 2rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: rgba(13, 26, 36, 0.45);
+    max-width: 42rem;
+  }
+
+  .toc-title {
+    margin: 0 0 0.55rem;
+    color: var(--accent);
+    font-size: 0.85rem;
+  }
+
+  .toc ol {
+    margin: 0;
+    padding-left: 1.1rem;
+    color: var(--ink-muted);
+  }
+
+  .toc a:hover {
+    color: var(--ink);
+  }
+
+  .toc .depth-3 {
+    margin-left: 0.75rem;
+  }
+
+  .article-cta {
+    margin: 2.5rem 0 0;
+    max-width: 42rem;
+    padding: 1rem 0;
+    border-top: 1px solid var(--line);
+    color: var(--ink-muted);
+  }
+
+  .pager {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    max-width: 42rem;
+  }
+
+  .pager a {
+    display: grid;
+    gap: 0.25rem;
+    padding: 0.9rem 0;
+    border-top: 1px solid var(--line);
+    color: var(--ink);
+  }
+
+  .pager a span {
+    color: var(--ink-muted);
+    font-size: 0.82rem;
+  }
+
+  .pager a:last-child {
+    text-align: right;
+  }
+
+  @media (max-width: 760px) {
+    .pager {
+      grid-template-columns: 1fr;
+    }
+
+    .pager a:last-child {
+      text-align: left;
+    }
+  }
+</style>
